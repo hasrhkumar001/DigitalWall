@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Digital Wall</title>
+  <link rel="stylesheet" href="main2.css" />
+  
+</head>
+<body>
+  <div class="container">
+    <a href="main.html"><h1>Digital Wall</h1></a>
+
+    <!-- Module 1: Basic Functionalities -->
+    <div id="module-1">
+      <!-- Wall -->
+      <div id="wall">
+        
+        <input type="text" id="board-search" class="search-input" placeholder="Search boards by title">
+        <button id="create-board-button">Create Board</button>
+        <div class="board-container">
+          <!-- Boards will be dynamically created here -->
+        </div>
+      </div>
+
+      <!-- Single Board -->
+      <div id="single-board" style="display: none;">
+        <h2 id="board-title"></h2>
+        <input type="text" id="post-search" class="search-input" placeholder="Search posts by title">
+        <button id="create-post-button">Create Post</button>
+        <div id="post-container">
+          <!-- Posts will be dynamically created here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript code for the basic functionalities
+    const wall = document.getElementById('wall');
+    const boardContainer = document.querySelector('.board-container');
+    const createBoardButton = document.getElementById('create-board-button');
+    const boardSearchInput = document.getElementById('board-search');
+    const singleBoard =     document.getElementById('single-board');
+    const boardTitle = document.getElementById('board-title');
+    const postSearchInput = document.getElementById('post-search');
+    const createPostButton = document.getElementById('create-post-button');
+    const postContainer = document.getElementById('post-container');
+
+    // Array to store boards and their posts
+    let boards = [];
+
+    // Function to create a board
+    function createBoard(boardName) {
+      const board = {
+        name: boardName,
+        posts: []
+      };
+      boards.push(board);
+      return board;
+    }
+
+    // Function to create a post
+    function createPost(board, postText, postImage) {
+      const post = {
+        text: postText,
+        image: postImage,
+        likes: 0
+      };
+      board.posts.push(post);
+      return post;
+    }
+
+    // Function to render the boards on the wall
+    function renderBoards() {
+      boardContainer.innerHTML = '';
+
+      boards.forEach(board => {
+        const boardElement = document.createElement('div');
+        boardElement.classList.add('board');
+        
+        const boardHeading = document.createElement('h2');
+        boardHeading.textContent = board.name;
+        
+        boardElement.appendChild(boardHeading);
+
+        // Create a button to delete the board
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+          deleteBoard(board);
+        });
+        boardElement.appendChild(deleteButton);
+
+        // Open the board on click
+        boardElement.addEventListener('click', function() {
+          renderBoard(board);
+        });
+
+        boardContainer.appendChild(boardElement);
+      });
+    }
+
+    // Function to render a specific board with its posts
+    function renderBoard(board) {
+      wall.style.display = 'none';
+      singleBoard.style.display = 'block';
+      boardTitle.textContent = board.name;
+      postSearchInput.value = '';
+
+      // Create post elements and append them to the post container
+      postContainer.innerHTML = '';
+
+      board.posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+
+        const postText = document.createElement('p');
+        postText.textContent = post.text;
+        postElement.appendChild(postText);
+
+        if (post.image) {
+          const imageElement = document.createElement('img');
+          imageElement.src = post.image;
+          postElement.appendChild(imageElement);
+        }
+
+        // Create the like button and count
+        const likeButton = document.createElement('button');
+        likeButton.textContent = 'Like';
+        const likeCount = document.createElement('span');
+        likeCount.classList.add('like-count');
+        
+        
+        likeCount.textContent = post.likes === 1 ? '1 like' : post.likes + ' likes';
+        postElement.appendChild(likeButton);
+        postElement.appendChild(likeCount);
+
+        // Increment the like count on button click
+        likeButton.addEventListener('click', function() {
+          post.likes++;
+          likeCount.textContent = post.likes === 1 ? '1 like' : post.likes + ' likes';
+        });
+
+        // Create a button to delete the post
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+          deletePost(board, post);
+        });
+        postElement.appendChild(deleteButton);
+
+        postContainer.appendChild(postElement);
+      });
+    }
+
+    // Function to delete a board
+    function deleteBoard(board) {
+      const index = boards.indexOf(board);
+      if (index !== -1) {
+        boards.splice(index, 1);
+        renderBoards();
+      }
+    }
+
+    // Function to delete a post from a board
+    function deletePost(board , post) {
+      const postIndex = board.posts.indexOf(post);
+      if (postIndex !== -1) {
+        board.posts.splice(postIndex, 1);
+        renderBoard(board);
+      }
+    }
+
+    // Event listener for creating a board
+    createBoardButton.addEventListener('click', function() {
+      const boardName = prompt('Enter board name:');
+      if (boardName.trim() !== '') {
+        createBoard(boardName);
+        renderBoards();
+      }
+    });
+
+    // Event listener for searching boards
+    boardSearchInput.addEventListener('input', function() {
+      const searchTerm = boardSearchInput.value.toLowerCase();
+      const filteredBoards = boards.filter(board => board.name.toLowerCase().includes(searchTerm));
+      renderBoardSearchResults(filteredBoards);
+    });
+
+    // Function to render search results for boards
+    function renderBoardSearchResults(filteredBoards) {
+      boardContainer.innerHTML = '';
+
+      filteredBoards.forEach(board => {
+        const boardElement = document.createElement('div');
+        boardElement.classList.add('board');
+
+        const boardHeading = document.createElement('h2');
+        boardHeading.textContent = board.name;
+
+        boardElement.appendChild(boardHeading);
+
+        boardElement.addEventListener('click', function() {
+          renderBoard(board);
+        });
+
+        boardContainer.appendChild(boardElement);
+      });
+    }
+
+    // Event listener for creating a post
+    createPostButton.addEventListener('click', function() {
+      const postText = prompt('Enter post text:');
+      if (postText.trim() !== '') {
+        const postImage = prompt('Enter post image URL (optional):');
+        const board = boards.find(board => board.name === boardTitle.textContent);
+        createPost(board, postText, postImage);
+        renderBoard(board);
+      }
+    });
+
+    // Event listener for searching posts
+    postSearchInput.addEventListener('input', function() {
+      const searchTerm = postSearchInput.value.toLowerCase();
+      const board = boards.find(board => board.name === boardTitle.textContent);
+      const filteredPosts = board.posts.filter(post => post.text.toLowerCase().includes(searchTerm));
+      renderPostSearchResults(filteredPosts);
+    });
+
+    // Function to render search results for posts
+    function renderPostSearchResults(filteredPosts) {
+      postContainer.innerHTML = '';
+
+      filteredPosts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+
+        const postText = document.createElement('p');
+        postText.textContent = post.text;
+        postElement.appendChild(postText);
+
+        if (post.image) {
+          const imageElement = document.createElement('img');
+          imageElement.src = post.image;
+          postElement.appendChild(imageElement);
+        }
+
+        const likeButton = document.createElement('button');
+        likeButton.textContent = 'Like';
+        const likeCount = document.createElement('span');
+        likeCount.classList.add('like-count');
+        likeCount.textContent = post.likes === 1 ? '1 like' : post.likes + ' likes';
+        postElement.appendChild(likeButton);
+        postElement.appendChild(likeCount);
+
+        likeButton.addEventListener('click', function() {
+          post.likes++;
+          likeCount.textContent = post.likes === 1 ? '1 like' : post.likes + ' likes';
+        });
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+          deletePost(board, post);
+        });
+        postElement.appendChild(deleteButton);
+
+        postContainer.appendChild(postElement);
+      });
+    }
+
+    // Initialize the wall with sample data
+    const sampleBoard1 = createBoard('Board 1');
+    const sampleBoard2 = createBoard('Board 2');
+    const sampleBoard3 = createBoard('Board 3');
+    const samplePost1 = createPost(sampleBoard1, 'Sample Post 1', 'https://example.com/image1.jpg');
+    const samplePost2 = createPost(sampleBoard1, 'Sample Post 2');
+    const samplePost3 = createPost(sampleBoard2, 'Sample Post 3', 'https://example.com/image2.jpg');
+    const samplePost4 = createPost(sampleBoard2, 'Sample Post 4');
+    const samplePost5 = createPost(sampleBoard3, 'Sample Post 5', 'https://example.com/image3.jpg');
+
+    renderBoards();
+
+    // Function to initialize the wall with sample data
+    function initializeWall() {
+      boards = [sampleBoard1, sampleBoard2, sampleBoard3];
+      renderBoards();
+    }
+
+    initializeWall();
+  </script>
+</body>
+</html>
+
+
+
+
